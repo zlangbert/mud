@@ -46,8 +46,8 @@ class ServerActor extends Actor with ActorLogging {
           val key = iter.next()
           iter.remove()
 
-          if (key.isAcceptable) {
-            println("Accepting...")
+          if (key.isValid && key.isAcceptable) {
+            log.debug("Accepting...")
             val channel = server.accept()
             channel.configureBlocking(false)
             channel.socket().setTcpNoDelay(false)

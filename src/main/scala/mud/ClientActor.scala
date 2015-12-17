@@ -34,7 +34,7 @@ class ClientActor(channel: SocketChannel) extends Actor with ActorLogging {
         selector.selectedKeys().asScala.foreach { key =>
           selector.selectedKeys().remove(key)
 
-          if (key.isReadable) {
+          if (key.isValid && key.isReadable) {
             val client = key.channel().asInstanceOf[SocketChannel]
             buffer.clear()
             val n = client.read(buffer)
