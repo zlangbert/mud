@@ -41,10 +41,10 @@ class ServerActor extends Actor with ActorLogging {
         }
 
       case Process =>
-        val iter = selector.selectedKeys().iterator
-        while (iter.hasNext) {
-          val key = iter.next()
-          iter.remove()
+        val i = selector.selectedKeys().iterator
+        while (i.hasNext) {
+          val key = i.next()
+          i.remove()
 
           if (key.isValid && key.isAcceptable) {
             log.debug("Accepting...")

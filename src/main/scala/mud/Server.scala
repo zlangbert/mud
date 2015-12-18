@@ -2,7 +2,6 @@ package mud
 
 import akka.actor.{ActorSystem, Props}
 
-import scala.concurrent.ExecutionContext.Implicits._
 import scala.io.StdIn
 
 // command parsing
