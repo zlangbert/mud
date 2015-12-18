@@ -3,16 +3,15 @@ package mud
 import java.nio.ByteBuffer
 import java.nio.channels.{SelectionKey, Selector, SocketChannel}
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging, PoisonPill}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 class ClientActor(channel: SocketChannel) extends Actor with ActorLogging {
 
-  import context.dispatcher
   import ClientActor._
+  import context.dispatcher
 
   val selector = Selector.open()
   channel.register(selector, SelectionKey.OP_READ)
@@ -26,7 +25,8 @@ class ClientActor(channel: SocketChannel) extends Actor with ActorLogging {
         Future {
           selector.select()
         } onComplete {
-          case Success(_) => self ! Process
+          case Success(0) => self ! Listen
+          case Success(n) => self ! Process
           case Failure(e) => throw e
         }
 
@@ -39,13 +39,15 @@ class ClientActor(channel: SocketChannel) extends Actor with ActorLogging {
           if (key.isValid && key.isReadable) {
             val client = key.channel().asInstanceOf[SocketChannel]
             buffer.clear()
-            val n = client.read(buffer)
-
-            buffer.flip()
-            client.write(buffer)
+            client.read(buffer) match {
+              case -1 => self ! PoisonPill
+              case n =>
+                buffer.flip()
+                client.write(buffer)
+                self ! Listen
+            }
           }
         }
-        self ! Listen
     }
   }
 
