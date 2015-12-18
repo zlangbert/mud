@@ -9,7 +9,7 @@ import akka.actor._
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class ServerActor extends Actor with ActorLogging {
+class ServerActor(port: Int, host: String) extends Actor with ActorLogging {
 
   import context.dispatcher
   import ServerActor._
@@ -25,7 +25,7 @@ class ServerActor extends Actor with ActorLogging {
 
       case Start =>
         log.info("Starting server...")
-        server.bind(new InetSocketAddress("localhost", 1234))
+        server.bind(new InetSocketAddress(host, port))
         server.configureBlocking(false)
         server.register(selector, SelectionKey.OP_ACCEPT)
 
