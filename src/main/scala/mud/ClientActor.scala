@@ -43,8 +43,14 @@ class ClientActor(channel: SocketChannel) extends Actor with ActorLogging {
               case -1 => self ! PoisonPill
               case n =>
                 buffer.flip()
-                client.write(buffer)
-                self ! Listen
+                val command = new String(buffer.array(), 0, buffer.remaining()).replaceAll("""\R""", "")
+                command match {
+                  case "quit" => self ! PoisonPill
+                  case _ =>
+                    val response = ByteBuffer.wrap("Invalid command\n".getBytes("utf-8"))
+                    client.write(response)
+                    self ! Listen
+                }
             }
           }
         }

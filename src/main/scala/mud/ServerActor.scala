@@ -1,7 +1,6 @@
 package mud
 
 import java.net.InetSocketAddress
-import java.nio.ByteBuffer
 import java.nio.channels.{SelectionKey, Selector, ServerSocketChannel}
 
 import akka.actor._
@@ -11,12 +10,11 @@ import scala.util.{Failure, Success}
 
 class ServerActor(port: Int, host: String) extends Actor with ActorLogging {
 
-  import context.dispatcher
   import ServerActor._
+  import context.dispatcher
 
   val server = ServerSocketChannel.open()
   val selector = Selector.open()
-  val readBuffer = ByteBuffer.allocate(8192)
 
   override def supervisorStrategy = SupervisorStrategy.stoppingStrategy
 
