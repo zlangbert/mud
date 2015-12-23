@@ -26,7 +26,7 @@ class Player(netHandler: ActorRef, world: ActorRef)
   /**
     * The player state
     */
-  var state = State(Actor.noSender)
+  var state = State(PlayerInfo("Player 1"), Actor.noSender)
 
   /**
     * Accepts commands and decides what to do with them
@@ -57,7 +57,8 @@ class Player(netHandler: ActorRef, world: ActorRef)
     */
   val netReceive: Receive = {
     case NetProtocol.Received(data) =>
-      val command = data.utf8String.replaceAll("""\R""", "")
+      val input = data.utf8String.replaceAll("""\R""", "")
+      val command = Commands.parse(input)
       commandHandler ! command
     case msg: NetProtocol.Send =>
       netHandler ! msg
@@ -65,6 +66,9 @@ class Player(netHandler: ActorRef, world: ActorRef)
 
   import Player.Protocol._
   val protocolReceive: Receive = {
+
+    case GetInfo => sender() ! state.info
+
     case GetRoom => sender() ! state.room
     case ChangeRooms(room) => state = state.copy(room = room)
 
@@ -99,7 +103,7 @@ class Player(netHandler: ActorRef, world: ActorRef)
           self ! Player.Protocol.ChangeRooms(target)
           currentRoom ! Room.Protocol.PlayerLeft(self)
           target ! Room.Protocol.PlayerEntered(self)
-          commandHandler ! "look"
+          commandHandler ! Commands.Look
           NetProtocol.SendEmpty
         }
       }.getOrElse(Future.successful(NetProtocol.prepareResponse("No exit there!\n")))
@@ -109,9 +113,13 @@ class Player(netHandler: ActorRef, world: ActorRef)
 
 object Player {
 
-  case class State(room: ActorRef)
+  case class PlayerInfo(name: String)
+
+  case class State(info: PlayerInfo, room: ActorRef)
 
   object Protocol {
+
+    case object GetInfo
 
     case object GetRoom
     case class ChangeRooms(room: ActorRef)

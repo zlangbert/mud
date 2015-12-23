@@ -3,11 +3,20 @@ package mud
 import java.util.UUID
 
 import akka.actor._
+import akka.util.Timeout
+import mud.Player.PlayerInfo
 import mud.Room.RoomInfo
+import akka.pattern.ask
+import mud.net.NetProtocol
+import scala.concurrent.duration._
 
 import scala.collection.mutable
 
 class Room(info: RoomInfo) extends Actor {
+
+  import context.dispatcher
+
+  implicit val timeout: Timeout = 5.seconds
 
   /**
     * Players currently in the room
@@ -28,8 +37,21 @@ class Room(info: RoomInfo) extends Actor {
 
   val protocolReceive: Receive = {
     case GetInfo => sender ! info
+
     case PlayerEntered(player) => players += player
     case PlayerLeft(player) => players -= player
+
+    case LocalMessage(speaker, message) =>
+      for {
+        info <- (speaker ? Player.Protocol.GetInfo).mapTo[PlayerInfo]
+      } {
+        val speakerMsg = NetProtocol.prepareResponse(s"You say '$message'\n")
+        val othersMsg = NetProtocol.prepareResponse(s"${info.name} says '$message'\n")
+        players.foreach {
+          case p if p != speaker => p ! othersMsg
+          case s => s ! speakerMsg
+        }
+      }
   }
 }
 
@@ -54,6 +76,7 @@ object Room {
     case object GetInfo
     case class PlayerEntered(player: ActorRef)
     case class PlayerLeft(player: ActorRef)
+    case class LocalMessage(speaker: ActorRef, message: String)
   }
 
 }
