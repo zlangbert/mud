@@ -1,5 +1,7 @@
 package mud
 
+import java.util.UUID
+
 import akka.actor._
 import mud.Room.RoomInfo
 
@@ -16,20 +18,41 @@ class Room(info: RoomInfo) extends Actor {
   val players = mutable.Buffer[ActorRef]()
 
   import Room.Protocol._
-  def receive = {
+  def receive =
+    protocolReceive orElse
+      globalEventReceive
+
+  val globalEventReceive: Receive = {
+    case GlobalEvents.PlayerLeftServer(player) => players -= player
+  }
+
+  val protocolReceive: Receive = {
     case GetInfo => sender ! info
-    case PlayerJoined(player) => players += player
+    case PlayerEntered(player) => players += player
     case PlayerLeft(player) => players -= player
   }
 }
 
 object Room {
 
-  case class RoomInfo(name: String, description: String)
+  case class RoomInfo(id: UUID, name: String, description: String, exits: RoomExits)
+
+  case class RoomExits(north: Option[UUID] = None, east: Option[UUID] = None,
+                       south: Option[UUID] = None, west: Option[UUID] = None) {
+    override def toString: String = {
+      val exits = Seq(
+        north.map(_ => "north"),
+        east.map(_ => "east"),
+        south.map(_ => "south"),
+        west.map(_ => "west")
+      )
+      "Exits: " + exits.flatten.mkString(", ")
+    }
+  }
 
   object Protocol {
     case object GetInfo
-    case class PlayerJoined(player: ActorRef)
+    case class PlayerEntered(player: ActorRef)
     case class PlayerLeft(player: ActorRef)
   }
 

@@ -15,4 +15,14 @@ object NetProtocol {
     * @param data
     */
   case class Send(data: ByteString)
+
+  /**
+    * An empty send
+    */
+  val SendEmpty: Send = Send(ByteString())
+
+  def prepareResponse(response: String): Send = {
+    val data = ByteString(response + "\n")
+    NetProtocol.Send(data)
+  }
 }

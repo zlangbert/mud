@@ -1,14 +1,16 @@
 package mud
 
 import akka.actor._
-import akka.util.{Timeout, ByteString}
+import akka.pattern.{ask, pipe}
+import akka.util.{ByteString, Timeout}
 import mud.Room.RoomInfo
 import mud.net.NetProtocol
-import akka.pattern.ask
-import akka.pattern.pipe
+import mud.util.Direction
+
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class CommandHandler extends Actor {
+class CommandHandler(world: ActorRef) extends Actor {
 
   import context.dispatcher
 
@@ -27,16 +29,24 @@ class CommandHandler extends Actor {
           s"""
             |${info.name}
             |${info.description}
+            |${info.exits}
           """.stripMargin
-        prepareResponse(response)
+        NetProtocol.prepareResponse(response)
       }) pipeTo player
+
+    case "n" =>
+      sender() ! Player.Protocol.Move(Direction.North)
+
+    case "e" =>
+      sender() ! Player.Protocol.Move(Direction.East)
+
+    case "s" =>
+      sender() ! Player.Protocol.Move(Direction.South)
+
+    case "w" =>
+      sender() ! Player.Protocol.Move(Direction.West)
 
     case c =>
       sender() ! NetProtocol.Send(ByteString(s"\nInvalid command: $c\n\n"))
-  }
-
-  def prepareResponse(response: String): NetProtocol.Send = {
-    val data = ByteString(response + "\n")
-    NetProtocol.Send(data)
   }
 }
