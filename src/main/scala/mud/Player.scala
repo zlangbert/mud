@@ -1,6 +1,7 @@
 package mud
 
 import akka.actor._
+import akka.util.ByteString
 import mud.Player.Protocol.{GetRoom, ChangeRooms}
 import mud.net.NetProtocol
 
@@ -10,7 +11,8 @@ import mud.net.NetProtocol
   *                   receives [[mud.net.NetProtocol]] messages
   * @param world The game world
   */
-class Player(netHandler: ActorRef, world: ActorRef) extends Actor {
+class Player(netHandler: ActorRef, world: ActorRef)
+  extends Actor with ActorLogging {
 
   import Player._
 
@@ -37,7 +39,8 @@ class Player(netHandler: ActorRef, world: ActorRef) extends Actor {
     */
   def receive =
     netReceive orElse
-    protocolReceive
+    protocolReceive orElse
+    errorReceive
 
   /**
     * Handles data coming from the tcp connection or
@@ -54,6 +57,12 @@ class Player(netHandler: ActorRef, world: ActorRef) extends Actor {
   val protocolReceive: Receive = {
     case GetRoom => sender() ! state.room
     case ChangeRooms(room) => state = state.copy(room = room)
+  }
+
+  val errorReceive: Receive = {
+    case Status.Failure(e) =>
+      log.error(e, "Player error")
+      netHandler ! NetProtocol.Send(ByteString("\nThere was an error processing your request\n\n"))
   }
 }
 
