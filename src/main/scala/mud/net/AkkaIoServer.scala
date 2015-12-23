@@ -20,7 +20,7 @@ class AkkaIoServer(host: String, port: Int) extends Actor with ActorLogging {
   val world = context.actorOf(Props(new World))
 
   override def preStart(): Unit = {
-    IO(Tcp) ! Bind(self, new InetSocketAddress("localhost", 1234))
+    IO(Tcp) ! Bind(self, new InetSocketAddress(host, port))
   }
 
   override def postStop(): Unit = {
