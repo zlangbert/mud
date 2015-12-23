@@ -12,6 +12,9 @@ abstract class ServerBackend(host: String, port: Int) {
 
 object ServerBackend {
 
+  /**
+    * A server backend based on Akka IO. The low level details are handled by Akka
+    */
   class AkkaIo(host: String, port: Int)(implicit val system: ActorSystem)
     extends ServerBackend(host, port) {
 
@@ -20,6 +23,10 @@ object ServerBackend {
     }
   }
 
+  /**
+    * A server backend based on java sockets. A main server actor accepts connections
+    * and spawns a worker for each client. The client then polls for input
+    */
   class JavaSockets(host: String, port: Int)(implicit val system: ActorSystem)
     extends ServerBackend(host, port) {
 
@@ -29,6 +36,10 @@ object ServerBackend {
     }
   }
 
+  /**
+    * A server backend based on java channels. A main server actor accepts connections
+    * and spawns a worker actor for each client. The client then listens for new data
+    */
   class JavaChannels(host: String, port: Int)(implicit val system: ActorSystem)
     extends ServerBackend(host, port) {
 

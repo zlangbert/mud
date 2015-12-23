@@ -10,6 +10,9 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
+/**
+  * @see [[ServerBackend.JavaSockets]]
+  */
 class JavaSocketServer(host: String, port: Int) extends Actor with ActorLogging {
 
   import JavaSocketServer._

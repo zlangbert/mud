@@ -10,6 +10,12 @@ import akka.util.ByteString
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
+/**
+  * @see [[ServerBackend.JavaChannels]]
+  *
+  * @note This is (very) roughly how Akka IO works under the hood. Except
+  *       Akka IO does it infinitely better
+  */
 class JavaChannelServer(host: String, port: Int) extends Actor with ActorLogging {
 
   import JavaChannelServer._
