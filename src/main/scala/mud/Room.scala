@@ -41,7 +41,7 @@ class Room(info: RoomInfo) extends Actor {
     case PlayerEntered(player) => players += player
     case PlayerLeft(player) => players -= player
 
-    case LocalMessage(speaker, message) =>
+    case LocalSay(speaker, message) =>
       for {
         info <- (speaker ? Player.Protocol.GetInfo).mapTo[PlayerInfo]
       } {
@@ -76,7 +76,7 @@ object Room {
     case object GetInfo
     case class PlayerEntered(player: ActorRef)
     case class PlayerLeft(player: ActorRef)
-    case class LocalMessage(speaker: ActorRef, message: String)
+    case class LocalSay(speaker: ActorRef, message: String)
   }
 
 }

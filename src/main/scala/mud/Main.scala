@@ -5,7 +5,7 @@ import mud.net.ServerBackend
 
 object Main extends App {
 
-  val Host = "localhost"
+  val Host = "0.0.0.0"
   val Port = 1234
 
   implicit val system = ActorSystem()

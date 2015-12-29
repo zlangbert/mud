@@ -37,6 +37,7 @@ class Player(netHandler: ActorRef, world: ActorRef)
 
   override def preStart(): Unit = {
     context.system.eventStream.publish(GlobalEvents.PlayerJoinedServer(self))
+    commandHandler ! Commands.Look
   }
 
   override def postStop(): Unit = {

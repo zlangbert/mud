@@ -38,7 +38,7 @@ class CommandHandler(world: ActorRef) extends Actor {
     case Commands.Say(message) =>
       val player = sender()
       (player ? Player.Protocol.GetRoom).mapTo[ActorRef]
-        .foreach(_ ! Room.Protocol.LocalMessage(player, message))
+        .foreach(_ ! Room.Protocol.LocalSay(player, message))
 
     case Commands.Invalid(input) =>
       sender() ! NetProtocol.Send(ByteString(s"\nInvalid command: $input\n\n"))
