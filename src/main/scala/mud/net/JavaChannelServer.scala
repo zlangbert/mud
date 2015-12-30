@@ -124,13 +124,13 @@ private class JavaChannelClient(channel: SocketChannel) extends Actor with Actor
                 buffer.flip()
                 self ! Listen
 
-                self ! NetProtocol.Send(ByteString(buffer))
+                self ! NetProtocol.SendToClient(ByteString(buffer))
             }
           }
         }
     }
 
-    case NetProtocol.Send(data) =>
+    case NetProtocol.SendToClient(data) =>
       channel.write(data.asByteBuffer)
   }
 

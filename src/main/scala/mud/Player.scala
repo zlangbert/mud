@@ -3,7 +3,9 @@ package mud
 import akka.actor._
 import akka.pattern.{ask, pipe}
 import akka.util.{ByteString, Timeout}
+import mud.PlayerHandler.CreationData
 import mud.Room.RoomInfo
+import mud.commands.{Commands, CommandHandler}
 import mud.net.NetProtocol
 import mud.util.Direction
 
@@ -16,7 +18,7 @@ import scala.concurrent.duration._
   *                   receives [[mud.net.NetProtocol]] messages
   * @param world The game world
   */
-class Player(netHandler: ActorRef, world: ActorRef)
+class Player(netHandler: ActorRef, world: ActorRef, creationData: CreationData)
   extends Actor with ActorLogging {
 
   import Player._
@@ -26,7 +28,7 @@ class Player(netHandler: ActorRef, world: ActorRef)
   /**
     * The player state
     */
-  var state = State(PlayerInfo("Player 1"), Actor.noSender)
+  var state = State(PlayerInfo(creationData.name), Actor.noSender)
 
   /**
     * Accepts commands and decides what to do with them
@@ -37,12 +39,13 @@ class Player(netHandler: ActorRef, world: ActorRef)
 
   override def preStart(): Unit = {
     context.system.eventStream.publish(GlobalEvents.PlayerJoinedServer(self))
-    commandHandler ! Commands.Look
   }
 
   override def postStop(): Unit = {
     context.system.eventStream.publish(GlobalEvents.PlayerLeftServer(self))
   }
+
+  context.system.scheduler.scheduleOnce(200.millis, commandHandler, Commands.Look)
 
   /**
     * [[Receive]]
@@ -61,8 +64,10 @@ class Player(netHandler: ActorRef, world: ActorRef)
       val input = data.utf8String.replaceAll("""\R""", "")
       val command = Commands.parse(input)
       commandHandler ! command
-    case msg: NetProtocol.Send =>
+    case msg: NetProtocol.SendToClient =>
       netHandler ! msg
+    case NetProtocol.Disconnect =>
+      netHandler ! NetProtocol.Disconnect
   }
 
   import Player.Protocol._
@@ -79,7 +84,7 @@ class Player(netHandler: ActorRef, world: ActorRef)
   val errorReceive: Receive = {
     case Status.Failure(e) =>
       log.error(e, "Player error")
-      netHandler ! NetProtocol.Send(ByteString("\nThere was an error processing your request\n\n"))
+      netHandler ! NetProtocol.SendToClient(ByteString("\nThere was an error processing your request\n\n"))
   }
 
   def move(direction: Direction.Direction): Unit = {
@@ -89,7 +94,7 @@ class Player(netHandler: ActorRef, world: ActorRef)
       response <- checkExit(currentRoom, currentInfo)
     } yield response) pipeTo self
 
-    def checkExit(currentRoom: ActorRef, currentInfo: RoomInfo): Future[NetProtocol.Send] = {
+    def checkExit(currentRoom: ActorRef, currentInfo: RoomInfo): Future[NetProtocol.SendToClient] = {
 
       import Direction._
       val maybeExit = direction match {

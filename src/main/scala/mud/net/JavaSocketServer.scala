@@ -100,9 +100,9 @@ private class JavaSocketClient(socket: Socket) extends Actor {
       bos.flush()
 
       val command = ByteString(bos.toByteArray)
-      self ! NetProtocol.Send(command)
+      self ! NetProtocol.SendToClient(command)
 
-    case NetProtocol.Send(data) =>
+    case NetProtocol.SendToClient(data) =>
       val bb = data.asByteBuffer
       val bytes = Array.ofDim[Byte](bb.remaining())
       bb.get(bytes)

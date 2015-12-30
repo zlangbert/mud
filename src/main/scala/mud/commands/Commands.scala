@@ -1,13 +1,15 @@
-package mud
+package mud.commands
 
 import mud.util.Direction
-import mud.util.Direction.Direction
+import mud.util.Direction._
 
 object Commands {
 
   sealed trait Command
 
   case class Invalid(input: String) extends Command
+
+  case object Quit extends Command
 
   case object Look extends Command
 
@@ -16,6 +18,8 @@ object Commands {
   case class Say(message: String) extends Command
 
   def parse(input: String): Command = input.split(" ").toList match {
+
+    case "quit" :: Nil => Quit
 
     case "look" :: Nil => Look
 

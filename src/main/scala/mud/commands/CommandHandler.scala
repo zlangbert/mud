@@ -1,10 +1,11 @@
-package mud
+package mud.commands
 
 import akka.actor._
 import akka.pattern.{ask, pipe}
 import akka.util.{ByteString, Timeout}
 import mud.Room.RoomInfo
 import mud.net.NetProtocol
+import mud.{Player, Room}
 
 import scala.concurrent.duration._
 
@@ -16,6 +17,9 @@ class CommandHandler(world: ActorRef) extends Actor {
 
   // assume sender is a player
   def receive = {
+
+    case Commands.Quit =>
+      sender() ! NetProtocol.Disconnect
 
     case Commands.Look =>
       val player = sender()
@@ -41,6 +45,6 @@ class CommandHandler(world: ActorRef) extends Actor {
         .foreach(_ ! Room.Protocol.LocalSay(player, message))
 
     case Commands.Invalid(input) =>
-      sender() ! NetProtocol.Send(ByteString(s"\nInvalid command: $input\n\n"))
+      sender() ! NetProtocol.SendToClient(ByteString(s"\nInvalid command: $input\n\n"))
   }
 }
