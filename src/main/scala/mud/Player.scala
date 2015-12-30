@@ -110,7 +110,7 @@ class Player(netHandler: ActorRef, world: ActorRef, creationData: CreationData)
           currentRoom ! Room.Protocol.PlayerLeft(self)
           target ! Room.Protocol.PlayerEntered(self)
           commandHandler ! Commands.Look
-          NetProtocol.SendEmpty
+          NetProtocol.SendToClient.Empty
         }
       }.getOrElse(Future.successful(NetProtocol.prepareResponse("No exit there!\n")))
     }

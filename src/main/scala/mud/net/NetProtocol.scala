@@ -17,11 +17,9 @@ object NetProtocol {
     * @param data
     */
   case class SendToClient(data: ByteString)
-
-  /**
-    * An empty send
-    */
-  val SendEmpty: SendToClient = SendToClient(ByteString())
+  object SendToClient {
+    val Empty = SendToClient(ByteString())
+  }
 
   /**
     * Instruct the client to disconnect

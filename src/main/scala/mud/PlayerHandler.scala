@@ -34,7 +34,9 @@ class PlayerHandler(address: InetSocketAddress, connection: ActorRef, world: Act
     case Event(Tcp.Received(data), d@CreationData(_, None)) =>
       Gender.fromString(NetProtocol.sanitize(data)) match {
         case g@Some(gender) =>
-          stay using d.copy(gender = g)
+          val data = d.copy(gender = g)
+          val player = context.actorOf(Props(new Player(self, world, data)))
+          goto(Playing) using PlayerData(player)
         case _ =>
           val message =
             """
@@ -43,10 +45,6 @@ class PlayerHandler(address: InetSocketAddress, connection: ActorRef, world: Act
           self ! NetProtocol.prepareResponse(message)
           stay
       }
-
-    case Event(Tcp.Received(data), d: CreationData) =>
-      val player = context.actorOf(Props(new Player(self, world, d)))
-      goto(Playing) using PlayerData(player)
   }
 
   when(Playing) {
